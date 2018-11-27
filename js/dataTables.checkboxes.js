@@ -114,6 +114,7 @@
          for(var i = 0; i < ctx.aoColumns.length; i++){
             if (ctx.aoColumns[i].checkboxes){
                var $colHeader = $(dt.column(i).header());
+               var $colFooter = $(dt.column(i).footer());
 
                //
                // INITIALIZATION
@@ -159,9 +160,11 @@
 
                // WORKAROUND: Remove "sorting" class
                $colHeader.removeClass('sorting');
+               $colFooter.removeClass('sorting');
 
                // WORKAROUND: Detach all event handlers for this column
                $colHeader.off('.dt');
+               $colFooter.off('.dt');
 
                // If table has data source other than Ajax
                if(ctx.sAjaxSource === null){
@@ -208,6 +211,7 @@
                if(ctx.aoColumns[i].checkboxes.selectAll){
                   // Save previous HTML content
                   $colHeader.data('html', $colHeader.html());
+                  $colFooter.data('html', $colFooter.html());
 
                   // If "Select all" control markup is provided
                   if(ctx.aoColumns[i].checkboxes.selectAllRender !== null){
@@ -223,6 +227,10 @@
                      }
 
                      $colHeader
+                        .html(selectAllHtml)
+                        .addClass('dt-checkboxes-select-all')
+                        .attr('data-col', i);
+                     $colFooter
                         .html(selectAllHtml)
                         .addClass('dt-checkboxes-select-all')
                         .attr('data-col', i);
@@ -284,9 +292,17 @@
             $tableContainer.on('click.dtCheckboxes', 'thead th.dt-checkboxes-select-all input[type="checkbox"]', function(e){
                self.onClickSelectAll(e, this);
             });
+            // Handle click on "Select all" control
+            $tableContainer.on('click.dtCheckboxes', 'tfoot th.dt-checkboxes-select-all input[type="checkbox"]', function(e){
+               self.onClickSelectAll(e, this);
+            });
 
             // Handle click on heading containing "Select all" control
             $tableContainer.on('click.dtCheckboxes', 'thead th.dt-checkboxes-select-all', function() {
+               $('input[type="checkbox"]', this).not(':disabled').trigger('click');
+            });
+            // Handle click on footing containing "Select all" control
+            $tableContainer.on('click.dtCheckboxes', 'tfoot th.dt-checkboxes-select-all', function() {
                $('input[type="checkbox"]', this).not(':disabled').trigger('click');
             });
 
@@ -304,6 +320,12 @@
                // Prevent default behavior
                e.preventDefault();
             });
+            // Handle click on label node in footing containing "Select all" control
+            // and in cell containing checkbox
+            $tableContainer.on('click.dtCheckboxes', 'tfoot th.dt-checkboxes-select-all label, tbody td.dt-checkboxes-cell label', function(e) {
+               // Prevent default behavior
+               e.preventDefault();
+            });
 
             // Handle click on "Select all" control in floating fixed header
             $(document).on('click.dtCheckboxes', '.fixedHeader-floating thead th.dt-checkboxes-select-all input[type="checkbox"]', function(e){
@@ -315,6 +337,15 @@
                   }
                }
             });
+            $(document).on('click.dtCheckboxes', '.fixedHeader-floating tfoot th.dt-checkboxes-select-all input[type="checkbox"]', function(e){
+               // If FixedHeader is enabled in this instance
+               if(ctx._fixedHeader){
+                  // If footer is floating in this instance
+                  if(ctx._fixedHeader.dom['footer'].floating){
+                     self.onClickSelectAll(e, this);
+                  }
+               }
+            });
 
             // Handle click on heading containing "Select all" control in floating fixed header
             $(document).on('click.dtCheckboxes', '.fixedHeader-floating thead th.dt-checkboxes-select-all', function() {
@@ -322,6 +353,15 @@
                if(ctx._fixedHeader){
                   // If header is floating in this instance
                   if(ctx._fixedHeader.dom['header'].floating){
+                     $('input[type="checkbox"]', this).trigger('click');
+                  }
+               }
+            });
+            $(document).on('click.dtCheckboxes', '.fixedHeader-floating tfoot th.dt-checkboxes-select-all', function() {
+               // If FixedHeader is enabled in this instance
+               if(ctx._fixedHeader){
+                  // If footer is floating in this instance
+                  if(ctx._fixedHeader.dom['footer'].floating){
                      $('input[type="checkbox"]', this).trigger('click');
                   }
                }
